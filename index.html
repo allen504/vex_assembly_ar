@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AR.js GLB Model with Hiro Marker</title>
+    <style>
+        body { margin: 0; overflow: hidden; }
+        #ar-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+    </style>
+    <!-- Import A-Frame -->
+    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+    <!-- Use the AR.js library from cdnjs -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ar.js/2.1.1/aframe-ar.min.js"></script>
+    <!-- Import GLTFLoader -->
+    <script src="https://cdn.rawgit.com/mrdoob/three.js/r127/examples/js/loaders/GLTFLoader.js"></script>
+</head>
+<body>
+    <!-- AR.js container -->
+    <a-scene embedded arjs="sourceType: webcam;">
+        <!-- Define a Hiro marker -->
+        <a-marker type="hiro">
+            <a-entity id="gltf-model" position="0 0 0" rotation="0 0 0" scale="1 1 1"></a-entity>
+        </a-marker>
+        <!-- Camera -->
+        <a-entity camera></a-entity>
+    </a-scene>
+
+    <script>
+        let mixer;
+
+        // Use A-Frame's internal THREE to load the GLB model
+        const loader = new AFRAME.THREE.GLTFLoader();
+        loader.load('pin_beam.glb', function(gltf) {
+            const model = gltf.scene;
+
+            // Scale the model to fit the AR marker
+            model.scale.set(20, 20, 20); // Adjust the scale based on your model size
+            model.position.set(0, 0, 0); // Place the model on the marker's center
+
+            // Set up the animation mixer and start the animation
+            mixer = new AFRAME.THREE.AnimationMixer(model);
+            const action = mixer.clipAction(gltf.animations[0]);
+            action.play();
+
+            // Add the model to the marker entity
+            const entity = document.querySelector('#gltf-model');
+            entity.object3D.add(model);
+        }, undefined, function(error) {
+            console.error(error);
+        });
+
+        // Animation loop to update the mixer
+        const clock = new AFRAME.THREE.Clock();
+        function animate() {
+            requestAnimationFrame(animate);
+            if (mixer) {
+                const delta = clock.getDelta();
+                mixer.update(delta);
+            }
+        }
+        animate();
+    </script>
+</body>
+</html>
